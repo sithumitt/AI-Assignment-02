@@ -3,12 +3,96 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Page configuration
+# Set Page Config
 st.set_page_config(
     page_title="SmartCare - Disease Risk Predictor",
     layout="wide",
     page_icon="🏥"
 )
+
+# Custom Palette CSS Injection
+CUSTOM_CSS = """
+<style>
+    /* Gradient Header */
+    .smartcare-header {
+        background: linear-gradient(135deg, #000851 0%, #003366 30%, #0077B6 70%, #00B4D8 100%);
+        padding: 24px;
+        border-radius: 12px;
+        color: #FFFFFF;
+        text-align: center;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 14px rgba(0, 51, 102, 0.15);
+    }
+    .smartcare-header h1 {
+        color: #FFFFFF !important;
+        font-weight: 700;
+        margin: 0;
+        font-size: 2.2rem;
+    }
+    .smartcare-header p {
+        color: #CAF0F8 !important;
+        margin-top: 8px;
+        font-size: 1.05rem;
+    }
+
+    /* Section Subheaders */
+    .section-title {
+        color: #003366;
+        font-weight: 700;
+        font-size: 1.15rem;
+        padding-bottom: 6px;
+        border-bottom: 2px solid #90E0EF;
+        margin-top: 15px;
+        margin-bottom: 18px;
+    }
+
+    /* Streamlit Primary Button Styling */
+    div.stButton > button:first-child {
+        background: linear-gradient(90deg, #005A9E 0%, #0077B6 50%, #0096C7 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        font-size: 1.05rem !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 12px 28px !important;
+        width: 100% !important;
+        box-shadow: 0 4px 10px rgba(0, 119, 182, 0.3) !important;
+        transition: all 0.3s ease-in-out !important;
+    }
+    div.stButton > button:first-child:hover {
+        background: linear-gradient(90deg, #003366 0%, #005A9E 50%, #0077B6 100%) !important;
+        box-shadow: 0 6px 14px rgba(0, 51, 102, 0.4) !important;
+        transform: translateY(-1px);
+    }
+
+    /* Prediction Result Cards */
+    .result-card-low {
+        background: #E8F8FC;
+        border-left: 6px solid #48CAE4;
+        border-radius: 8px;
+        padding: 16px 20px;
+        color: #003366;
+        margin-top: 15px;
+    }
+    .result-card-medium {
+        background: #FFF9E6;
+        border-left: 6px solid #0077B6;
+        border-radius: 8px;
+        padding: 16px 20px;
+        color: #003366;
+        margin-top: 15px;
+    }
+    .result-card-high {
+        background: #FDF0F0;
+        border-left: 6px solid #000851;
+        border-radius: 8px;
+        padding: 16px 20px;
+        color: #000851;
+        margin-top: 15px;
+    }
+</style>
+"""
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # Load trained artifacts
 @st.cache_resource
@@ -23,7 +107,7 @@ try:
     ready = True
 except Exception as e:
     st.error(f"Error loading model artifacts: {e}")
-    st.info("Ensure best_model.pkl, scaler.pkl, and model_columns.pkl are inside the 'models/' folder.")
+    st.info("Ensure best_model.pkl, scaler.pkl, and model_columns.pkl are located inside the 'models/' folder.")
     ready = False
 
 # Allowed Input Value Ranges (Clinical Validation Boundary)
@@ -39,13 +123,18 @@ VALID_RANGES = {
     "Treatments Count": (0, 15, "treatments")
 }
 
-st.title("🏥 SmartCare AI: Disease Risk Assessment")
-st.markdown("Multi-class disease risk classification decision support system.")
+# Branded App Header
+st.markdown("""
+<div class="smartcare-header">
+    <h1>SmartCare AI: Disease Risk Assessment</h1>
+    <p>Clinical Decision Support System for Multi-Class Risk Stratification</p>
+</div>
+""", unsafe_allow_html=True)
 
 if ready:
     with st.form("risk_assessment_form"):
-        # Section 1: Primary Clinical Vitals & Lab Measurements (Highest Importance)
-        st.subheader("1. Primary Clinical Biomarkers & Vitals (High Importance)")
+        # Section 1: Primary Biomarkers
+        st.markdown('<div class="section-title">1. Primary Clinical Biomarkers & Vitals (High Importance)</div>', unsafe_allow_html=True)
         col1_1, col1_2, col1_3 = st.columns(3)
         
         with col1_1:
@@ -84,10 +173,8 @@ if ready:
                 help="Valid Range: 12.0 – 50.0 kg/m²"
             )
 
-        st.divider()
-
-        # Section 2: Clinical Diagnosis & Medical History (Medium Importance)
-        st.subheader("2. Diagnosis & Medical History (Medium Importance)")
+        # Section 2: Medical History
+        st.markdown('<div class="section-title">2. Diagnosis & Medical History (Medium Importance)</div>', unsafe_allow_html=True)
         col2_1, col2_2, col2_3 = st.columns(3)
         
         with col2_1:
@@ -122,10 +209,8 @@ if ready:
                 help="Valid Range: 0 – 15"
             )
 
-        st.divider()
-
-        # Section 3: Patient Demographics (Standard Context)
-        st.subheader("3. Patient Demographics")
+        # Section 3: Patient Demographics
+        st.markdown('<div class="section-title">3. Patient Demographics</div>', unsafe_allow_html=True)
         col3_1, col3_2, col3_3 = st.columns(3)
         
         with col3_1:
@@ -145,10 +230,11 @@ if ready:
                 ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
             )
 
+        st.markdown("<br>", unsafe_allow_html=True)
         submitted = st.form_submit_button("Predict Disease Risk Level")
 
     if submitted:
-        # Validate all inputs against defined ranges
+        # Validate input ranges
         user_inputs = {
             "Age": age,
             "Systolic Blood Pressure": systolic_bp,
@@ -166,21 +252,20 @@ if ready:
             min_val, max_val, unit = VALID_RANGES[feature_name]
             if value < min_val:
                 invalid_inputs.append(
-                    f"**{feature_name}**: Entered value `{value}` is below minimum acceptable value `{min_val} {unit}` (Acceptable Range: {min_val} – {max_val} {unit})"
+                    f"**{feature_name}**: Entered value `{value}` is below the minimum allowed value `{min_val} {unit}` (Acceptable Range: {min_val} – {max_val} {unit})"
                 )
             elif value > max_val:
                 invalid_inputs.append(
-                    f"**{feature_name}**: Entered value `{value}` exceeds maximum acceptable value `{max_val} {unit}` (Acceptable Range: {min_val} – {max_val} {unit})"
+                    f"**{feature_name}**: Entered value `{value}` exceeds the maximum allowed value `{max_val} {unit}` (Acceptable Range: {min_val} – {max_val} {unit})"
                 )
 
-        # Halt execution and show validation report if out of bounds
         if invalid_inputs:
             st.error("❌ **Prediction Halted: Invalid Input Values Detected**")
-            st.warning("Please enter valid clinical values within the defined physiological ranges before generating a prediction:")
+            st.warning("Please adjust the following parameters to remain within valid physiological boundaries:")
             for msg in invalid_inputs:
                 st.markdown(f"- {msg}")
         else:
-            # Prepare tabular data for inference
+            # Build input DataFrame
             input_data = pd.DataFrame([{
                 'age': age,
                 'gender': gender,
@@ -197,11 +282,10 @@ if ready:
                 'treatments_count': treatments_count
             }])
 
-            # One-Hot Encoding alignment
+            # Encoding & Scaler Alignment
             input_encoded = pd.get_dummies(input_data)
             input_encoded = input_encoded.reindex(columns=model_columns, fill_value=0)
 
-            # Feature Scaling
             num_cols = [
                 'age', 'previous_admissions', 'systolic_bp', 'diastolic_bp',
                 'blood_sugar_mg_dl', 'cholesterol_mg_dl', 'bmi',
@@ -212,11 +296,26 @@ if ready:
             # Prediction
             prediction = model.predict(input_encoded)[0]
 
-            # Display Output Result
-            st.subheader("Assessment Result")
+            # Render Styled Output Cards
+            st.markdown('<div class="section-title">Assessment Result</div>', unsafe_allow_html=True)
             if prediction == "High":
-                st.error("🚨 Predicted Disease Risk Level: **HIGH RISK**")
+                st.markdown("""
+                <div class="result-card-high">
+                    <h3 style="margin:0; color:#000851;">🚨 Predicted Risk Level: HIGH RISK</h3>
+                    <p style="margin:5px 0 0 0;">Patient parameters indicate significantly elevated clinical biomarkers. Immediate preventive specialist review recommended.</p>
+                </div>
+                """, unsafe_allow_html=True)
             elif prediction == "Medium":
-                st.warning("⚠️ Predicted Disease Risk Level: **MEDIUM RISK**")
+                st.markdown("""
+                <div class="result-card-medium">
+                    <h3 style="margin:0; color:#005A9E;">⚠️ Predicted Risk Level: MEDIUM RISK</h3>
+                    <p style="margin:5px 0 0 0;">Patient displays borderline clinical risk indicators. Routine follow-up and lifestyle intervention advised.</p>
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.success("✅ Predicted Disease Risk Level: **LOW RISK**")
+                st.markdown("""
+                <div class="result-card-low">
+                    <h3 style="margin:0; color:#0077B6;">✅ Predicted Risk Level: LOW RISK</h3>
+                    <p style="margin:5px 0 0 0;">Patient vitals and clinical metrics fall comfortably within normal operational thresholds.</p>
+                </div>
+                """, unsafe_allow_html=True)
