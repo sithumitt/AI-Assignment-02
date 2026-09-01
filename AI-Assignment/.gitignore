@@ -20,9 +20,7 @@ data/processed/*.csv
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
-# Trained model artifacts (regenerable via pipeline)
-models/*.pkl
-!models/.gitkeep
+
 
 # Reports / figures (regenerable)
 reports/figures/*.png
